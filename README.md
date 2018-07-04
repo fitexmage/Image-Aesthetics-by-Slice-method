@@ -1,11 +1,11 @@
 # Image Aesthetics by Slice method
-The project is written in Python 2.7.10. It is a machine learning algorithm for rating images.
+The project is written in Python 2.7.10. It is a deep learning algorithm for rating images.
 
-# Process
+# Function
 
 ## Process data
     * Slice image to small parts
-    * extract the features
+    * Extract the features
 
 ## Train model
     * Use CNN to train the model
