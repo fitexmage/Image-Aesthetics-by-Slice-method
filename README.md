@@ -10,6 +10,10 @@ The project is written in Python 2.7.10. It is a deep learning algorithm for rat
 ## Train model
     * Use CNN to train the model
 
+# Prepare
+   * Millions of images
+   * Labels of images
+
 # Dependency
     
 ## pip
