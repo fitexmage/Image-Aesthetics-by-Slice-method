@@ -2,10 +2,7 @@ import keras
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
-from keras.models import model_from_json
-from keras.callbacks import TensorBoard
 import datetime
-import pathlib
 import sys
 import time
 import traceback
@@ -22,77 +19,52 @@ print ("Loading...")
 # Load training and testing data
 
 try:
-    x_train, y_train, valid_train = l.load_train() # Load trainning data from Load.py.
+    x_train, y_train, valid_train = l.load_train() # Load data from Load.py.
     print ("Training data loaded!")
-    x_test, y_test, valid_test = l.load_test()  # Load testing data from Load.py.
+    x_test, y_test, valid_test = l.load_test()  # Load data from Load.py.
     print ("Testing data loaded!")
 except Exception as e:
     f = open(d.error_address, 'a')
-    f.write("\n %s" % traceback.format_exc() + "\n\n")
+    f.write("\n Error: " + "%s" % traceback.format_exc() + "\n\n")
     f.close()
     sys.exit(0)
 
-y_train = d.categorical(y_train, valid_train) # Make the labels categorical. Only categorical data can be trained.
-y_test = d.categorical(y_test, valid_test) # Make the labels categorical. Only categorical data can be trained.
+y_train = d.categorical(y_train) # Make the labels categorical. Only categorical data can be trained.
+y_test = d.categorical(y_test) # Make the labels categorical. Only categorical data can be trained.
 
-input_shape = (d.img_rows, d.img_cols, d.channel) # Define the input shape for model.
+input_shape = (d.num_rows, d.num_cols, d.channel) # Define the input shape for model.
 
 # Model
 
 model = Sequential()
-model.add(Dropout(0.5, input_shape=input_shape))
-model.add(Conv2D(16, kernel_size=(11, 11), activation='relu'))
+model.add(Conv2D(64, kernel_size=(5, 5), activation='sigmoid', input_shape=input_shape))
+model.add(Conv2D(64, kernel_size=(3, 3), activation='sigmoid'))
+model.add(Conv2D(64, kernel_size=(3, 3), activation='sigmoid'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.5, input_shape=input_shape))
-model.add(Conv2D(32, kernel_size=(5, 5), activation='relu'))
-model.add(Conv2D(32, kernel_size=(5, 5), activation='relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.5, input_shape=input_shape))
-model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
-model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.5, input_shape=input_shape))
-model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.5, input_shape=input_shape))
-model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
+model.add(Dropout(0.5))
+model.add(Conv2D(128, kernel_size=(2, 2), activation='sigmoid'))
+model.add(Conv2D(128, kernel_size=(2, 2), activation='sigmoid'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Flatten())
-model.add(Dropout(0.5))
-model.add(Dense(512, activation='relu'))
-model.add(Dense(128, activation='relu'))
+model.add(Dense(1024, activation='sigmoid'))
+model.add(Dense(512, activation='sigmoid'))
 model.add(Dropout(0.5))
 model.add(Dense(d.num_classes, activation='softmax'))
+sgd = keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
 model.compile(loss=keras.losses.categorical_crossentropy,
-              optimizer=keras.optimizers.Adam(lr=0.001),
-              metrics=['acc'])
-
-if pathlib.Path(d.parameters_address).is_file(): # Check if the model has already saved in the previous training.
-    model.load_weights(d.parameters_address) # Load the weight.
-    print("Model loaded!")
-
-tensorboard = TensorBoard(log_dir="data/logs/{:%Y%m%d%H%M}".format(datetime.datetime.now())) # Create a Tensorboard.
-
-# tensorboard --logdir PycharmProjects/Image_Aesthetics/data/logs/
-# http://localhost:6006/
+              optimizer=sgd,
+              #optimizer=keras.optimizers.Adam(lr=0.0001),
+              metrics=['mae']) #'accuracy'
 
 # Start training
 
 start_train = time.time() # Record the starting time for training.
 
-try:
-    model.fit(x_train, y_train,
-              batch_size=d.batch_size,
-              epochs=d.epochs,
-              verbose=1,
-              validation_data=(x_test, y_test),
-              callbacks=[tensorboard])
-
-except Exception as e:
-    f = open(d.error_address, 'a')
-    f.write("\n %s" % traceback.format_exc() + "\n\n")
-    f.close()
-    sys.exit(0)
+model.fit(x_train, y_train,
+          batch_size=d.batch_size,
+          epochs=d.epochs,
+          verbose=1,
+          validation_data=(x_test, y_test))
 
 # Time use
 
@@ -102,7 +74,7 @@ print("It takes " + time_run + " for running.")
 print("It takes " + time_train + " for training.")
 
 # Evaluation
-score = model.evaluate(x_test, y_test, verbose=0) # Score contains loss, accuracy, and mae.
+score = model.evaluate(x_train, y_train, verbose=0) # Score contains loss, accuracy, and mae.
 loss = score[0] # Loss of training
 accuracy = "{:.5f}".format(score[1]) # Accuracy of training
 print('Test loss: ', loss)
