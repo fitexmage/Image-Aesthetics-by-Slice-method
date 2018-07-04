@@ -1,4 +1,4 @@
-# Image Aesthetics by Slice method
+# Image Aesthetics using Slice method
 The project is written in Python 2.7.10. It is a deep learning algorithm for rating images.
 
 # Function
