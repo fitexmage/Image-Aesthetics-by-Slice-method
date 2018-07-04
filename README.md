@@ -12,7 +12,8 @@ The project is written in Python 2.7.10. It is a deep learning algorithm for rat
 
 # Prepare
    * Millions of images
-   * Labels of images
+   * Labels to images
+   * Other information of images to improve accuracy
 
 # Dependency
     
